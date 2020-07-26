@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "16245276840",
+    "firebase_url": "https://dominos-guard.firebaseio.com",
+    "project_id": "dominos-guard",
+    "storage_bucket": "dominos-guard.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:16245276840:android:6a26ce5c0fecb47e20c29d",
+        "android_client_info": {
+          "package_name": "com.example.dominos_guardian"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "16245276840-6sjtnevhai84r4vur7rb2fu5fj98tga1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA2wls7hPklJkSqrJe5si-126QQm5gygnM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "16245276840-6sjtnevhai84r4vur7rb2fu5fj98tga1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
