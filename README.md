@@ -1,16 +1,2 @@
-# dominos_guardian
-
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+# Dominos Guardian
+As a domino's development team, we have to track dynatrace everyday.  If an error will happen, we have to understand what is the reason of error and we have to fix immediatly. So we decided that we need to guardians which control dynatrace errors everyday. We had a website which decide the who are the guardians today but we couldn't check everyday this website. We needed to a reminder. Afterthat i made a decision that we have to a mobile application which sends a notification to everyone in development team.
