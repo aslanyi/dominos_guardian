@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class UserCard extends StatelessWidget {
-  UserCard(this.employee);
+  UserCard({this.date, @required this.employee});
+  final String date;
   final Employee employee;
 
   String getEmployeeAvatarName() {
@@ -23,50 +24,62 @@ class UserCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-        child: Column(
-      children: <Widget>[
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            Container(
-                child: Text(
-                    '${employee.getTeamValue(employee.team).toUpperCase()} ${employee.getRoleValue(employee.role).toUpperCase()}')),
-            FlatButton(
-                onPressed: () {}, child: Text('Tümünü gör'), padding: EdgeInsets.only(right: 0)),
-          ],
-        ),
-        Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+          color: Color.fromRGBO(221, 225, 249, 0.6),
+          borderRadius: BorderRadius.all(Radius.circular(30))),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Container(
+            margin: const EdgeInsets.only(left: 10),
+            padding: const EdgeInsets.all(5),
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.black),
+                gradient: LinearGradient(colors: [
+                  Color.fromRGBO(157, 95, 222, 0.5),
+                  Color.fromRGBO(207, 98, 198, 1),
+                ]),
+                borderRadius: BorderRadius.all(Radius.circular(20))),
+            child: Text(
+              '${employee.getTeamValue(employee.team).toUpperCase()} ${employee.getRoleValue(employee.role).toUpperCase()}',
+              style: TextStyle(color: Colors.white),
             ),
-            padding: const EdgeInsets.all(10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Avatar(getEmployeeAvatarName()),
-                Padding(padding: const EdgeInsets.only(left: 10)),
-                Expanded(
-                  child: Container(
-                    height: 100,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: <Widget>[
-                        Text('${employee.name} ${employee.surname}'),
-                        Text('20/01/2019'),
-                        OutlineButton.icon(
-                            onPressed: () async {
-                              await _makePhoneCall();
-                            },
-                            icon: Icon(Icons.call),
-                            label: Text('Ara'))
-                      ],
-                    ),
+          ),
+          Padding(padding: const EdgeInsets.all(5)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Avatar(getEmployeeAvatarName()),
+              Padding(padding: const EdgeInsets.only(left: 10)),
+              Expanded(
+                child: Container(
+                  height: 50,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      Text(
+                        '${employee.name} ${employee.surname}',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        date != null ? date : '',
+                        style: TextStyle(color: Colors.black38),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            )),
-      ],
-    ));
+              ),
+              IconButton(
+                  color: Colors.grey,
+                  onPressed: () async {
+                    await _makePhoneCall();
+                  },
+                  icon: Icon(Icons.call)),
+            ],
+          )
+        ],
+      ),
+    );
   }
 }

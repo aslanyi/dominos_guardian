@@ -12,63 +12,64 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   TextEditingController _textEditingController = new TextEditingController();
-  final SharedPreferencesHelper _sharedPreferencesHelper = new SharedPreferencesHelper();
-  bool isLoading = true;
-
+  String error = '';
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration.zero, () async {
-      final UserProvider userProvider = Provider.of<UserProvider>(context, listen: false);
-      String phoneNumber = await _sharedPreferencesHelper.getStringData('phoneNumber');
-      if (phoneNumber != null) {
-        userProvider.getUserByPhoneNumber(phoneNumber);
-        Navigator.pushNamed(context, '/');
-        return;
-      }
-      setState(() {
-        isLoading = false;
-      });
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        body: isLoading
-            ? Center(child: CircularProgressIndicator())
-            : Container(
-                child: Center(
-                    child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Container(
-                      padding: const EdgeInsets.all(20),
-                      child: TextField(
-                        decoration: InputDecoration(labelText: 'Telefon Numarası'),
-                        keyboardType: TextInputType.phone,
-                        autofocus: true,
-                        maxLength: 13,
-                        controller: _textEditingController,
-                      )),
-                  OutlineButton.icon(
-                      onPressed: () async {
-                        final userProvider = Provider.of<UserProvider>(context, listen: false);
-                        final sharedPreferences = new SharedPreferencesHelper();
-                        var user = userProvider.employeeList.firstWhere(
-                            (element) => element.phoneNumber == _textEditingController.text,
-                            orElse: () => null);
-                        if (user != null) {
-                          bool isSet = await sharedPreferences.setStringData(
-                              'phoneNumber', user.phoneNumber);
-                          if (isSet) {
-                            Navigator.pushNamed(context, '/');
-                          }
-                        }
-                      },
-                      icon: Icon(Icons.arrow_forward),
-                      label: Text('Giriş Yap')),
-                ],
-              ))));
+    return WillPopScope(
+      onWillPop: () async {
+        return false;
+      },
+      child: Scaffold(
+          body: Container(
+              child: Center(
+                  child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          error != ''
+              ? Text(
+                  error,
+                  style:
+                      TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                )
+              : Container(),
+          Container(
+              padding: const EdgeInsets.all(20),
+              child: TextField(
+                decoration: InputDecoration(labelText: 'Telefon Numarası'),
+                keyboardType: TextInputType.phone,
+                maxLength: 13,
+                controller: _textEditingController,
+              )),
+          OutlineButton.icon(
+              onPressed: () async {
+                final userProvider =
+                    Provider.of<UserProvider>(context, listen: false);
+                final sharedPreferences = new SharedPreferencesHelper();
+                var user = userProvider.employeeList.firstWhere(
+                    (element) =>
+                        element.phoneNumber == _textEditingController.text,
+                    orElse: () => null);
+                if (user != null) {
+                  bool isSet = await sharedPreferences.setStringData(
+                      'phoneNumber', user.phoneNumber);
+                  if (isSet) {
+                    userProvider.setCurrentUser(user);
+                  }
+                } else {
+                  setState(() {
+                    error = 'Bu numaraya ait kullanıcı yok.';
+                  });
+                }
+              },
+              icon: Icon(Icons.arrow_forward),
+              label: Text('Giriş Yap')),
+        ],
+      )))),
+    );
   }
 }

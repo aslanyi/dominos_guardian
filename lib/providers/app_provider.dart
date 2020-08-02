@@ -5,12 +5,17 @@ import 'package:flutter/material.dart';
 class AppProvider with ChangeNotifier, DiagnosticableTreeMixin {
   FirebaseApp _firebaseApp;
 
-  AppProvider(firebaseApp) {
-    this._firebaseApp = firebaseApp;
+  List<dynamic> _dates = [];
+
+  AppProvider(firebaseApp, dates) {
+    _firebaseApp = firebaseApp;
+    _dates = dates;
     notifyListeners();
   }
 
   FirebaseApp get firebaseApp => _firebaseApp;
+
+  List<dynamic> get dates => _dates;
 
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 class UserProvider with ChangeNotifier, DiagnosticableTreeMixin {
   List<Employee> _employeeList;
+
   List<Employee> get employeeList => _employeeList;
 
   Employee _currentUser;
@@ -24,12 +25,9 @@ class UserProvider with ChangeNotifier, DiagnosticableTreeMixin {
     return _mappedEmployeeList;
   }
 
-  Employee getUserByPhoneNumber(String phoneNumber) {
-    final Employee employee = _employeeList
-        .firstWhere((element) => element.phoneNumber == phoneNumber, orElse: () => null);
+  void setCurrentUser(Employee employee) {
     _currentUser = employee;
     notifyListeners();
-    return employee;
   }
 
   void setEmployeeList(List<dynamic> employeeList) {
