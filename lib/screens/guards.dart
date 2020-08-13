@@ -1,5 +1,7 @@
+import 'package:dominos_guardian/helpers/initialize.dart';
 import 'package:dominos_guardian/models/employee.dart';
 import 'package:dominos_guardian/models/employees_with_date.dart';
+import 'package:dominos_guardian/providers/app_provider.dart';
 import 'package:dominos_guardian/providers/user_provider.dart';
 import 'package:dominos_guardian/widgets/app_bar.dart';
 import 'package:dominos_guardian/widgets/card.dart';
@@ -17,17 +19,14 @@ class Guards extends StatefulWidget {
 }
 
 class GuardsState extends State<Guards> {
-  static const Map<String, List<String>> data = {
-    'teams': ['RU', 'TR'],
-    'roles': ['FRONTEND', 'BACKEND'],
-  };
+  Map<String, List<dynamic>> teamsAndRoles = {'teams': [], 'roles': []};
+  Map<String, List<bool>> filtersBoolean = {'teams': [], 'roles': []};
 
-  Map<String, List<bool>> filtersBoolean = {
-    'teams': List.filled(data['teams'].length, false),
-    'roles': List.filled(data['roles'].length, false),
-  };
+  Future<List<dynamic>> _teams;
+  Future<List<dynamic>> _roles;
 
   List<Employee> filteredEmployees = [];
+
   Map<String, List<String>> filters = {
     'teams': [],
     'roles': [],
@@ -37,9 +36,9 @@ class GuardsState extends State<Guards> {
 
   handleFilter(index, selected, filteringName) {
     if (selected) {
-      filters[filteringName].add(data[filteringName][index]);
+      filters[filteringName].add(teamsAndRoles[filteringName][index]);
     } else {
-      filters[filteringName].remove(data[filteringName][index]);
+      filters[filteringName].remove(teamsAndRoles[filteringName][index]);
     }
 
     List<String> filteredRoles = filters['roles'];
@@ -51,25 +50,18 @@ class GuardsState extends State<Guards> {
       filteredRoles.forEach((role) {
         filteredTeams.forEach((team) {
           filteredEmployees.addAll(_guardsList
-              .where((element) =>
-                  element.getTeamValue(element.team) == team.toLowerCase() &&
-                  element.getRoleValue(element.role) == role.toLowerCase())
+              .where((element) => element.team == team && element.role == role)
               .toList());
         });
       });
     } else if (filteredRoles.length > 0 && filteredTeams.length == 0) {
       filteredRoles.forEach((role) {
-        filteredEmployees.addAll(_guardsList
-            .where((element) =>
-                element.getRoleValue(element.role) == role.toLowerCase())
-            .toList());
+        filteredEmployees.addAll(_guardsList.where((element) => element.role == role).toList());
       });
     } else {
       filteredTeams.forEach((team) {
-        filteredEmployees.addAll(_guardsList
-            .where((element) =>
-                element.getTeamValue(element.team) == team.toLowerCase())
-            .toList());
+        filteredEmployees
+            .addAll(_guardsList.where((element) => element.team == team.toLowerCase()).toList());
       });
     }
     setState(() {
@@ -79,20 +71,33 @@ class GuardsState extends State<Guards> {
   }
 
   getAllGuards() {
-    final List<Employee> employees =
-        Provider.of<UserProvider>(context, listen: false)
-            .employeeList
-            .where((element) => element.isGuard)
-            .toList();
+    final List<Employee> employees = Provider.of<UserProvider>(context, listen: false)
+        .employeeList
+        .where((element) => element.isGuard)
+        .toList();
     setState(() {
       _guardsList = employees;
     });
+  }
+
+  Future<List<dynamic>> getDataFromFirebase(key) async {
+    final appProvider = Provider.of<AppProvider>(context, listen: false);
+    final FirebaseHelper _firebaseHelper = new FirebaseHelper(appProvider.firebaseApp);
+    final data = await _firebaseHelper.getData(key);
+    teamsAndRoles[key] = data;
+    filtersBoolean[key] = List.filled(data.length, false);
+    setState(() {
+      filtersBoolean = filtersBoolean;
+    });
+    return data;
   }
 
   @override
   void initState() {
     super.initState();
     getAllGuards();
+    _teams = getDataFromFirebase('teams');
+    _roles = getDataFromFirebase('roles');
   }
 
   @override
@@ -103,71 +108,100 @@ class GuardsState extends State<Guards> {
         CustomAppBar('Nöbetçiler'),
         SliverToBoxAdapter(
           child: Container(
-            padding:
-                const EdgeInsets.only(right: 20, left: 20, top: 0, bottom: 0),
-            height: 50,
-            width: media.width,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: data['teams'].length,
-              itemBuilder: (ctx, index) => Container(
-                margin: const EdgeInsets.only(right: 10),
-                child: FilterChip(
-                    checkmarkColor: Colors.white,
-                    selectedColor: const Color.fromRGBO(157, 95, 222, 1),
-                    backgroundColor: const Color.fromRGBO(221, 225, 249, 0.3),
-                    label: Text(
-                      data['teams'][index],
-                      style: TextStyle(
-                          color: filtersBoolean['teams'][index]
-                              ? Colors.white
-                              : Colors.black),
-                    ),
-                    showCheckmark: true,
-                    selected: filtersBoolean['teams'][index],
-                    onSelected: (selected) {
-                      handleFilter(index, selected, 'teams');
-                    }),
-              ),
-            ),
-          ),
+              padding: const EdgeInsets.only(right: 20, left: 20, top: 0, bottom: 0),
+              height: 50,
+              width: media.width,
+              child: FutureBuilder(
+                builder: (ctx, snapshot) {
+                  Widget _widget;
+                  if (snapshot.hasError) {
+                    _widget = Text('error');
+                  }
+                  switch (snapshot.connectionState) {
+                    case ConnectionState.waiting:
+                      _widget = CircularProgressIndicator();
+                      break;
+                    case ConnectionState.done:
+                      _widget = ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: snapshot.data.length,
+                        itemBuilder: (ctx, index) => Container(
+                          margin: const EdgeInsets.only(right: 10),
+                          child: FilterChip(
+                              checkmarkColor: Colors.white,
+                              selectedColor: const Color.fromRGBO(157, 95, 222, 1),
+                              backgroundColor: const Color.fromRGBO(221, 225, 249, 0.3),
+                              label: Text(
+                                snapshot.data[index],
+                                style: TextStyle(
+                                    color: filtersBoolean['teams'][index]
+                                        ? Colors.white
+                                        : Colors.black),
+                              ),
+                              showCheckmark: true,
+                              selected: filtersBoolean['teams'][index],
+                              onSelected: (selected) {
+                                handleFilter(index, selected, 'teams');
+                              }),
+                        ),
+                      );
+                      break;
+                  }
+                  return _widget;
+                },
+                future: _teams,
+              )),
         ),
         SliverToBoxAdapter(
           child: Container(
-            padding:
-                const EdgeInsets.only(right: 20, left: 20, top: 0, bottom: 0),
-            height: 50,
-            width: media.width,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: data['roles'].length,
-              itemBuilder: (ctx, index) => Container(
-                margin: const EdgeInsets.only(right: 10),
-                child: FilterChip(
-                    checkmarkColor: Colors.white,
-                    selectedColor: const Color.fromRGBO(157, 95, 222, 1),
-                    backgroundColor: const Color.fromRGBO(221, 225, 249, 0.3),
-                    label: Text(
-                      data['roles'][index],
-                      style: TextStyle(
-                          color: filtersBoolean['roles'][index]
-                              ? Colors.white
-                              : Colors.black),
-                    ),
-                    showCheckmark: true,
-                    selected: filtersBoolean['roles'][index],
-                    onSelected: (selected) {
-                      handleFilter(index, selected, 'roles');
-                    }),
-              ),
-            ),
-          ),
+              padding: const EdgeInsets.only(right: 20, left: 20, top: 0, bottom: 0),
+              height: 50,
+              width: media.width,
+              child: FutureBuilder(
+                builder: (ctx, snapshot) {
+                  Widget _widget;
+                  if (snapshot.hasError) {
+                    _widget = Text('error');
+                  }
+                  switch (snapshot.connectionState) {
+                    case ConnectionState.waiting:
+                      _widget = CircularProgressIndicator();
+                      break;
+                    case ConnectionState.done:
+                      _widget = ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: snapshot.data.length,
+                        itemBuilder: (ctx, index) => Container(
+                          margin: const EdgeInsets.only(right: 10),
+                          child: FilterChip(
+                              checkmarkColor: Colors.white,
+                              selectedColor: const Color.fromRGBO(157, 95, 222, 1),
+                              backgroundColor: const Color.fromRGBO(221, 225, 249, 0.3),
+                              label: Text(
+                                snapshot.data[index],
+                                style: TextStyle(
+                                    color: filtersBoolean['roles'][index]
+                                        ? Colors.white
+                                        : Colors.black),
+                              ),
+                              showCheckmark: true,
+                              selected: filtersBoolean['roles'][index],
+                              onSelected: (selected) {
+                                handleFilter(index, selected, 'roles');
+                              }),
+                        ),
+                      );
+                      break;
+                  }
+                  return _widget;
+                },
+                future: _roles,
+              )),
         ),
         SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
           return Container(
-              padding:
-                  const EdgeInsets.only(right: 20, left: 20, top: 0, bottom: 0),
+              padding: const EdgeInsets.only(right: 20, left: 20, top: 0, bottom: 0),
               child: Column(children: <Widget>[
                 UserCard(
                     employee: filteredEmployees.length > 0
@@ -176,9 +210,8 @@ class GuardsState extends State<Guards> {
                 Padding(padding: const EdgeInsets.only(top: 30)),
               ]));
         },
-                childCount: filteredEmployees.length > 0
-                    ? filteredEmployees.length
-                    : _guardsList.length))
+                childCount:
+                    filteredEmployees.length > 0 ? filteredEmployees.length : _guardsList.length))
       ],
     );
   }

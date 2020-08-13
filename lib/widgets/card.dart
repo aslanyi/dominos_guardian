@@ -41,7 +41,7 @@ class UserCard extends StatelessWidget {
                 ]),
                 borderRadius: BorderRadius.all(Radius.circular(20))),
             child: Text(
-              '${employee.getTeamValue(employee.team).toUpperCase()} ${employee.getRoleValue(employee.role).toUpperCase()}',
+              '${employee.team.toUpperCase()} ${employee.role.toUpperCase()}',
               style: TextStyle(color: Colors.white),
             ),
           ),

@@ -1,13 +1,15 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 
 class FirebaseHelper {
-  FirebaseHelper(this.firebaseApp);
+  FirebaseDatabase firebaseDatabase;
 
-  final firebaseApp;
+  FirebaseHelper(FirebaseApp firebaseApp) {
+    firebaseDatabase = new FirebaseDatabase(app: firebaseApp);
+  }
 
   Future<List<dynamic>> getData(String key) async {
-    final FirebaseDatabase database = FirebaseDatabase(app: firebaseApp);
-    DatabaseReference _dbRef = database.reference();
+    DatabaseReference _dbRef = firebaseDatabase.reference();
     final snapshot = await _dbRef.once();
     if (snapshot.value != null) {
       return snapshot.value[key];
@@ -15,10 +17,9 @@ class FirebaseHelper {
     return null;
   }
 
-  void setDateWithEmployees(List<Map<String, List<String>>> dateWithEmployees) {
-    final FirebaseDatabase database = FirebaseDatabase(app: firebaseApp);
-    DatabaseReference _dbRef = database.reference();
-    DatabaseReference _child = _dbRef.child('dates');
-    _child.set(dateWithEmployees);
+  Future<void> setData(String key, dynamic data) async {
+    DatabaseReference dbRef = firebaseDatabase.reference();
+    DatabaseReference child = dbRef.child(key);
+    await child.set(data);
   }
 }

@@ -24,20 +24,17 @@ class CalendarState extends State<Calendar> {
 
   setEmployeesWithDates() {
     final dates = Provider.of<AppProvider>(context, listen: false).dates;
-    List<Employee> employees =
-        Provider.of<UserProvider>(context, listen: false).employeeList;
+    List<Employee> employees = Provider.of<UserProvider>(context, listen: false).employeeList;
     dates.forEach((date) {
       List<Employee> employeeList = [];
       date.forEach((key, value) {
         value.forEach((phoneNumber) {
-          Employee employee = employees
-              .firstWhere((element) => element.phoneNumber == phoneNumber);
+          Employee employee = employees.firstWhere((element) => element.phoneNumber == phoneNumber);
           if (employee != null) {
             employeeList.add(employee);
           }
         });
-        _employeesWithDate
-            .add(new EmployeesWithDate(date: key, employees: employeeList));
+        _employeesWithDate.add(new EmployeesWithDate(date: key, employees: employeeList));
       });
     });
   }
@@ -56,8 +53,7 @@ class CalendarState extends State<Calendar> {
   }
 
   handleCurrentUserDates() {
-    Employee currentUser =
-        Provider.of<UserProvider>(context, listen: false).currentUser;
+    Employee currentUser = Provider.of<UserProvider>(context, listen: false).currentUser;
     currentUserGuardianDates = new Map<DateTime, List<dynamic>>();
     if (currentUser.isGuard) {
       _employeesWithDate.forEach((element) {
@@ -66,8 +62,8 @@ class CalendarState extends State<Calendar> {
             orElse: () => null);
         if (_emp != null) {
           List<String> dates = element.date.split('-');
-          DateTime dateTime = DateTime(
-              int.parse(dates[2]), int.parse(dates[1]), int.parse(dates[0]));
+          DateTime dateTime =
+              DateTime(int.parse(dates[2]), int.parse(dates[1]), int.parse(dates[0]));
           currentUserGuardianDates.addAll({
             dateTime: [_emp]
           });
@@ -101,6 +97,7 @@ class CalendarState extends State<Calendar> {
                   borderRadius: BorderRadius.all(Radius.circular(30)),
                 ),
                 child: TableCalendar(
+                  initialCalendarFormat: CalendarFormat.twoWeeks,
                   events: currentUserGuardianDates,
                   startingDayOfWeek: StartingDayOfWeek.monday,
                   builders: CalendarBuilders(
@@ -128,8 +125,7 @@ class CalendarState extends State<Calendar> {
                     markersColor: Colors.brown[700],
                   ),
                   daysOfWeekStyle: DaysOfWeekStyle(
-                    dowTextBuilder: (date, locale) =>
-                        DateFormat.E(locale).format(date)[0],
+                    dowTextBuilder: (date, locale) => DateFormat.E(locale).format(date)[0],
                   ),
                   headerStyle: HeaderStyle(
                     centerHeaderTitle: true,
@@ -145,8 +141,7 @@ class CalendarState extends State<Calendar> {
         SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
           return Container(
-              padding:
-                  const EdgeInsets.only(right: 20, left: 20, top: 0, bottom: 0),
+              padding: const EdgeInsets.only(right: 20, left: 20, top: 0, bottom: 0),
               child: Column(children: <Widget>[
                 UserCard(employee: _employees[index]),
                 Padding(padding: const EdgeInsets.only(top: 30)),
