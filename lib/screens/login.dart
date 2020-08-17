@@ -11,8 +11,11 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  TextEditingController _textEditingController = new TextEditingController();
+  final TextEditingController _textEditingController = new TextEditingController();
   String error = '';
+
+  final String prefixText = '+90';
+
   @override
   void initState() {
     super.initState();
@@ -40,7 +43,7 @@ class _LoginState extends State<Login> {
           Container(
               padding: const EdgeInsets.all(20),
               child: TextField(
-                decoration: InputDecoration(labelText: 'Telefon Numarası'),
+                decoration: InputDecoration(labelText: 'Telefon Numarası', prefixText: prefixText),
                 keyboardType: TextInputType.phone,
                 maxLength: 13,
                 controller: _textEditingController,
@@ -52,7 +55,7 @@ class _LoginState extends State<Login> {
                 final sharedPreferences = new SharedPreferencesHelper();
                 var user = userProvider.employeeList.firstWhere(
                     (element) =>
-                        element.phoneNumber == _textEditingController.text,
+                        element.phoneNumber == '$prefixText${_textEditingController.text}',
                     orElse: () => null);
                 if (user != null) {
                   bool isSet = await sharedPreferences.setStringData(

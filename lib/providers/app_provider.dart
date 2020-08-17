@@ -17,6 +17,11 @@ class AppProvider with ChangeNotifier, DiagnosticableTreeMixin {
 
   List<dynamic> get dates => _dates;
 
+  setDates(dates) {
+    _dates = dates;
+    notifyListeners();
+  }
+
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);

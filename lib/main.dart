@@ -1,20 +1,18 @@
+// import 'package:dominos_guardian/helpers/generate_guardian_helper.dart';
 import 'package:dominos_guardian/helpers/initialize.dart';
+import 'package:dominos_guardian/helpers/local_notifications_helper.dart';
 import 'package:dominos_guardian/models/bottom_navigation_item.dart';
-import 'package:dominos_guardian/models/employees_with_date.dart';
 import 'package:dominos_guardian/providers/app_provider.dart';
 import 'package:dominos_guardian/providers/user_provider.dart';
 import 'package:dominos_guardian/screens/admin_guard_delete.dart';
 import 'package:dominos_guardian/screens/calendar.dart';
 import 'package:dominos_guardian/screens/admin_guard.dart';
 import 'package:dominos_guardian/screens/guards.dart';
-import 'package:dominos_guardian/widgets/app_bar.dart';
-import 'package:dominos_guardian/widgets/card.dart';
+import 'package:dominos_guardian/screens/home.dart';
 import 'package:dominos_guardian/widgets/custom_bottom_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 
@@ -57,7 +55,8 @@ class DominosGuardian extends StatelessWidget {
     return MaterialApp(
         title: 'Domino\'s Guardian',
         theme: ThemeData(
-          textTheme: GoogleFonts.montserratTextTheme(Theme.of(context).textTheme),
+          textTheme:
+              GoogleFonts.montserratTextTheme(Theme.of(context).textTheme),
           primarySwatch: Colors.blue,
           primaryTextTheme: TextTheme(
             bodyText1: TextStyle(color: Color.fromRGBO(157, 95, 222, 1)),
@@ -83,11 +82,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<Employee> guards = [];
-  EmployeesWithDate todaysGuards;
-
-  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
-  final SharedPreferencesHelper _sharedPreferencesHelper = new SharedPreferencesHelper();
+  final SharedPreferencesHelper _sharedPreferencesHelper =
+      new SharedPreferencesHelper();
 
   List<Widget> pages;
 
@@ -95,145 +91,66 @@ class _HomePageState extends State<HomePage> {
   bool isLoggedIn = false;
   bool isLoading = true;
 
-  Future<void> initializeLocalNotification() async {
-    var initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
-    var initializationSettings = InitializationSettings(initializationSettingsAndroid, null);
-    await flutterLocalNotificationsPlugin.initialize(initializationSettings,
-        onSelectNotification: selectNotification);
-  }
-
   Future<void> initialUser() async {
-    final UserProvider userProvider = Provider.of<UserProvider>(context, listen: false);
-    String phoneNumber = await _sharedPreferencesHelper.getStringData('phoneNumber');
+    final UserProvider userProvider =
+        Provider.of<UserProvider>(context, listen: false);
+    String phoneNumber =
+        await _sharedPreferencesHelper.getStringData('phoneNumber');
     if (phoneNumber != null) {
-      Employee _employee = userProvider.employeeList
-          .firstWhere((element) => element.phoneNumber == phoneNumber, orElse: () => null);
+      Employee _employee = userProvider.employeeList.firstWhere(
+          (element) => element.phoneNumber == phoneNumber,
+          orElse: () => null);
       if (_employee != null) {
         userProvider.setCurrentUser(_employee);
         setState(() {
           isLoggedIn = true;
           isLoading = false;
         });
-        sendNotification('Hoşgeldin ${_employee.name}');
       }
     }
-  }
-
-  Future selectNotification(String payload) async {
-    if (payload != null) {
-      debugPrint('notification payload: ' + payload);
-    }
-  }
-
-  Future sendNotification(String message) async {
-    var androidPlatformChannelSpecifics = AndroidNotificationDetails('1', 'a', 'b',
-        importance: Importance.Max, priority: Priority.High, ticker: 'ticker');
-    var platformChannelSpecifics = NotificationDetails(androidPlatformChannelSpecifics, null);
-    await flutterLocalNotificationsPlugin.show(0, 'Nöbetçi', message, platformChannelSpecifics);
-  }
-
-  Future sendScheduledNotification(String message) async {
-    var scheduledNotificationDateTime = Time(23, 45, 0);
-    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-        'your other channel id', 'your other channel name', 'your other channel description');
-    NotificationDetails platformChannelSpecifics =
-        NotificationDetails(androidPlatformChannelSpecifics, null);
-    await flutterLocalNotificationsPlugin.showDailyAtTime(
-        0, 'Nöbetçi', message, scheduledNotificationDateTime, platformChannelSpecifics);
-  }
-
-  List<Employee> getEmployeesByFilteringOptions(String team, String role) {
-    List<Employee> employees =
-        Provider.of<UserProvider>(context, listen: false).employeeList.where((element) {
-      if (element.team == team && element.role == role) {
-        return true;
-      }
-      return false;
-    }).toList();
-
-    return employees;
-  }
-
-  getEqualDates() {
-    final dates = Provider.of<AppProvider>(context, listen: false).dates;
-    final employees = Provider.of<UserProvider>(context, listen: false).employeeList;
-    String date = DateFormat('dd-MM-yyyy').format(DateTime.now());
-    List<Employee> guards = [];
-    if (dates != null && dates.length > 0) {
-      dates.forEach((element) {
-        if (element != null) {
-          element.forEach((key, value) {
-            if (key == date) {
-              value.forEach((val) {
-                Employee _employee = employees.firstWhere((element) => element.phoneNumber == val,
-                    orElse: () => null);
-                if (_employee != null) {
-                  guards.add(_employee);
-                }
-              });
-            }
-          });
-        }
-      });
-    }
-    todaysGuards = new EmployeesWithDate(date: date, employees: guards);
-    setState(() {
-      todaysGuards = todaysGuards;
-    });
-  }
-
-  getGuardianListString() {
-    String guardians = '';
-    todaysGuards.employees.forEach((element) {
-      guardians += ' ${element.name}';
-    });
-    return guardians;
   }
 
   @override
   void initState() {
     super.initState();
-    getEqualDates();
-    // generateGuardianDateList();
+    // GenerateGuardianHelper generateGuardianHelper =
+    //     new GenerateGuardianHelper();
+    // var employeeList =
+    //     Provider.of<UserProvider>(context, listen: false).employeeList;
+    // var firebaseApp =
+    //     Provider.of<AppProvider>(context, listen: false).firebaseApp;
+
+    // FirebaseHelper _firebaseHelper = new FirebaseHelper(firebaseApp);
+    // _firebaseHelper.setData(
+    //     'dates', generateGuardianHelper.generateGuardianDateList(employeeList));
     Future.delayed(Duration.zero, () async {
-      await initializeLocalNotification();
       await initialUser();
-      await sendScheduledNotification('Bugün kim nöbetçi?');
+      LocaLNotificationsHelper locaLNotificationsHelper =
+          new LocaLNotificationsHelper();
+      locaLNotificationsHelper
+          .sendScheduledNotification('Nöbetçiler yerlerinize!');
       setState(() {
         isLoading = false;
       });
     });
-    pages = [home(), Guards(todaysGuards), Calendar()];
-  }
-
-  Widget home() {
-    return CustomScrollView(slivers: <Widget>[
-      CustomAppBar('Bugünün Nöbetçileri'),
-      SliverList(
-          delegate: SliverChildBuilderDelegate((context, index) {
-        return Container(
-          padding: const EdgeInsets.only(right: 20, left: 20, top: 0, bottom: 0),
-          child: Column(children: <Widget>[
-            UserCard(date: todaysGuards.date, employee: todaysGuards.employees[index]),
-            Padding(padding: const EdgeInsets.only(top: 30)),
-          ]),
-        );
-      }, childCount: todaysGuards.employees.length))
-    ]);
+    pages = [Home(), Guards(), Calendar()];
   }
 
   BoxDecoration _background() {
     return BoxDecoration(
-        gradient: LinearGradient(begin: Alignment.bottomLeft, end: Alignment.topRight, colors: [
-      const Color.fromRGBO(72, 71, 79, 0.3),
-      const Color.fromRGBO(157, 95, 222, 0.3),
-      const Color.fromRGBO(207, 98, 198, 0.3),
-      const Color.fromRGBO(221, 225, 249, 0.3),
-      const Color.fromRGBO(72, 169, 251, 0.3),
-      const Color.fromRGBO(95, 91, 245, 0.3),
-      const Color.fromRGBO(185, 167, 210, 0.3),
-      const Color.fromRGBO(156, 147, 234, 0.6),
-    ]));
+        gradient: LinearGradient(
+            begin: Alignment.bottomLeft,
+            end: Alignment.topRight,
+            colors: [
+          const Color.fromRGBO(72, 71, 79, 0.3),
+          const Color.fromRGBO(157, 95, 222, 0.3),
+          const Color.fromRGBO(207, 98, 198, 0.3),
+          const Color.fromRGBO(221, 225, 249, 0.3),
+          const Color.fromRGBO(72, 169, 251, 0.3),
+          const Color.fromRGBO(95, 91, 245, 0.3),
+          const Color.fromRGBO(185, 167, 210, 0.3),
+          const Color.fromRGBO(156, 147, 234, 0.6),
+        ]));
   }
 
   Widget bottomNavigation() {
@@ -262,8 +179,8 @@ class _HomePageState extends State<HomePage> {
                 appBar: currentUser.isAdmin
                     ? AppBar(
                         backgroundColor: Colors.white,
-                        iconTheme:
-                            IconTheme.of(context).copyWith(color: Color.fromRGBO(157, 95, 222, 1)))
+                        iconTheme: IconTheme.of(context)
+                            .copyWith(color: Color.fromRGBO(157, 95, 222, 1)))
                     : null,
                 drawer: Drawer(
                   child: Column(
@@ -274,8 +191,10 @@ class _HomePageState extends State<HomePage> {
                               decoration: BoxDecoration(
                                 color: Colors.deepPurple,
                               ),
-                              accountName: Text('${currentUser.name} ${currentUser.surname}'),
-                              accountEmail: Text('${currentUser.phoneNumber}'))),
+                              accountName: Text(
+                                  '${currentUser.name} ${currentUser.surname}'),
+                              accountEmail:
+                                  Text('${currentUser.phoneNumber}'))),
                       Expanded(
                         child: Column(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -286,15 +205,17 @@ class _HomePageState extends State<HomePage> {
                                     leading: Icon(Icons.person_add,
                                         color: Color.fromRGBO(157, 95, 222, 1)),
                                     onTap: () {
-                                      Navigator.pushNamed(context, '/admin_guard');
+                                      Navigator.pushNamed(
+                                          context, '/admin_guard');
                                     },
                                     title: Text('Nöbetçi Ekle'),
                                   ),
                                   ListTile(
-                                    leading:
-                                        Icon(Icons.delete, color: Color.fromRGBO(157, 95, 222, 1)),
+                                    leading: Icon(Icons.delete,
+                                        color: Color.fromRGBO(157, 95, 222, 1)),
                                     onTap: () {
-                                      Navigator.pushNamed(context, '/admin_guard_delete');
+                                      Navigator.pushNamed(
+                                          context, '/admin_guard_delete');
                                     },
                                     title: Text('Nöbetçi Sil'),
                                   ),
@@ -312,7 +233,9 @@ class _HomePageState extends State<HomePage> {
                 ),
                 bottomNavigationBar: bottomNavigation(),
                 body: SafeArea(
-                    child: Container(decoration: _background(), child: pages[activePageIndex])))
+                    child: Container(
+                        decoration: _background(),
+                        child: pages[activePageIndex])))
             : Login();
   }
 }

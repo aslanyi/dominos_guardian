@@ -1,6 +1,5 @@
 import 'package:dominos_guardian/helpers/initialize.dart';
 import 'package:dominos_guardian/models/employee.dart';
-import 'package:dominos_guardian/models/employees_with_date.dart';
 import 'package:dominos_guardian/providers/app_provider.dart';
 import 'package:dominos_guardian/providers/user_provider.dart';
 import 'package:dominos_guardian/widgets/app_bar.dart';
@@ -9,9 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class Guards extends StatefulWidget {
-  final EmployeesWithDate todaysGuards;
-  Guards(this.todaysGuards);
-
   @override
   State<StatefulWidget> createState() {
     return new GuardsState();
@@ -56,12 +52,14 @@ class GuardsState extends State<Guards> {
       });
     } else if (filteredRoles.length > 0 && filteredTeams.length == 0) {
       filteredRoles.forEach((role) {
-        filteredEmployees.addAll(_guardsList.where((element) => element.role == role).toList());
+        filteredEmployees.addAll(
+            _guardsList.where((element) => element.role == role).toList());
       });
     } else {
       filteredTeams.forEach((team) {
-        filteredEmployees
-            .addAll(_guardsList.where((element) => element.team == team.toLowerCase()).toList());
+        filteredEmployees.addAll(_guardsList
+            .where((element) => element.team == team.toLowerCase())
+            .toList());
       });
     }
     setState(() {
@@ -70,19 +68,10 @@ class GuardsState extends State<Guards> {
     });
   }
 
-  getAllGuards() {
-    final List<Employee> employees = Provider.of<UserProvider>(context, listen: false)
-        .employeeList
-        .where((element) => element.isGuard)
-        .toList();
-    setState(() {
-      _guardsList = employees;
-    });
-  }
-
   Future<List<dynamic>> getDataFromFirebase(key) async {
     final appProvider = Provider.of<AppProvider>(context, listen: false);
-    final FirebaseHelper _firebaseHelper = new FirebaseHelper(appProvider.firebaseApp);
+    final FirebaseHelper _firebaseHelper =
+        new FirebaseHelper(appProvider.firebaseApp);
     final data = await _firebaseHelper.getData(key);
     teamsAndRoles[key] = data;
     filtersBoolean[key] = List.filled(data.length, false);
@@ -95,7 +84,6 @@ class GuardsState extends State<Guards> {
   @override
   void initState() {
     super.initState();
-    getAllGuards();
     _teams = getDataFromFirebase('teams');
     _roles = getDataFromFirebase('roles');
   }
@@ -103,12 +91,15 @@ class GuardsState extends State<Guards> {
   @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context).size;
+    final employees = context.watch<UserProvider>().employeeList;
+    _guardsList = employees;
     return CustomScrollView(
       slivers: <Widget>[
         CustomAppBar('Nöbetçiler'),
         SliverToBoxAdapter(
           child: Container(
-              padding: const EdgeInsets.only(right: 20, left: 20, top: 0, bottom: 0),
+              padding:
+                  const EdgeInsets.only(right: 20, left: 20, top: 0, bottom: 0),
               height: 50,
               width: media.width,
               child: FutureBuilder(
@@ -119,7 +110,7 @@ class GuardsState extends State<Guards> {
                   }
                   switch (snapshot.connectionState) {
                     case ConnectionState.waiting:
-                      _widget = CircularProgressIndicator();
+                      _widget = Center(child: CircularProgressIndicator());
                       break;
                     case ConnectionState.done:
                       _widget = ListView.builder(
@@ -129,8 +120,10 @@ class GuardsState extends State<Guards> {
                           margin: const EdgeInsets.only(right: 10),
                           child: FilterChip(
                               checkmarkColor: Colors.white,
-                              selectedColor: const Color.fromRGBO(157, 95, 222, 1),
-                              backgroundColor: const Color.fromRGBO(221, 225, 249, 0.3),
+                              selectedColor:
+                                  const Color.fromRGBO(157, 95, 222, 1),
+                              backgroundColor:
+                                  const Color.fromRGBO(221, 225, 249, 0.3),
                               label: Text(
                                 snapshot.data[index],
                                 style: TextStyle(
@@ -154,7 +147,8 @@ class GuardsState extends State<Guards> {
         ),
         SliverToBoxAdapter(
           child: Container(
-              padding: const EdgeInsets.only(right: 20, left: 20, top: 0, bottom: 0),
+              padding:
+                  const EdgeInsets.only(right: 20, left: 20, top: 0, bottom: 0),
               height: 50,
               width: media.width,
               child: FutureBuilder(
@@ -165,7 +159,7 @@ class GuardsState extends State<Guards> {
                   }
                   switch (snapshot.connectionState) {
                     case ConnectionState.waiting:
-                      _widget = CircularProgressIndicator();
+                      _widget = Center(child: CircularProgressIndicator());
                       break;
                     case ConnectionState.done:
                       _widget = ListView.builder(
@@ -175,8 +169,10 @@ class GuardsState extends State<Guards> {
                           margin: const EdgeInsets.only(right: 10),
                           child: FilterChip(
                               checkmarkColor: Colors.white,
-                              selectedColor: const Color.fromRGBO(157, 95, 222, 1),
-                              backgroundColor: const Color.fromRGBO(221, 225, 249, 0.3),
+                              selectedColor:
+                                  const Color.fromRGBO(157, 95, 222, 1),
+                              backgroundColor:
+                                  const Color.fromRGBO(221, 225, 249, 0.3),
                               label: Text(
                                 snapshot.data[index],
                                 style: TextStyle(
@@ -201,7 +197,8 @@ class GuardsState extends State<Guards> {
         SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
           return Container(
-              padding: const EdgeInsets.only(right: 20, left: 20, top: 0, bottom: 0),
+              padding:
+                  const EdgeInsets.only(right: 20, left: 20, top: 0, bottom: 0),
               child: Column(children: <Widget>[
                 UserCard(
                     employee: filteredEmployees.length > 0
@@ -210,8 +207,9 @@ class GuardsState extends State<Guards> {
                 Padding(padding: const EdgeInsets.only(top: 30)),
               ]));
         },
-                childCount:
-                    filteredEmployees.length > 0 ? filteredEmployees.length : _guardsList.length))
+                childCount: filteredEmployees.length > 0
+                    ? filteredEmployees.length
+                    : _guardsList.length))
       ],
     );
   }

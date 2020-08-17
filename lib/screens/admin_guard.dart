@@ -4,6 +4,7 @@ import 'package:dominos_guardian/helpers/generate_guardian_helper.dart';
 import 'package:dominos_guardian/helpers/initialize.dart';
 import 'package:dominos_guardian/models/employee.dart';
 import 'package:dominos_guardian/providers/app_provider.dart';
+import 'package:dominos_guardian/providers/user_provider.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -14,13 +15,17 @@ class AdminGuard extends StatefulWidget {
 }
 
 class _AdminGuardState extends State<AdminGuard> {
-  final TextStyle _labelTextStyle = TextStyle(color: Colors.grey[400], fontSize: 12);
+  final TextStyle _labelTextStyle =
+      TextStyle(color: Colors.grey[400], fontSize: 12);
 
   final GlobalKey<FormState> _formKey = GlobalKey();
 
-  final TextEditingController _textEditingControllerName = TextEditingController();
-  final TextEditingController _textEditingControllerSurname = TextEditingController();
-  final TextEditingController _textEditingControllerPhoneNumber = TextEditingController();
+  final TextEditingController _textEditingControllerName =
+      TextEditingController();
+  final TextEditingController _textEditingControllerSurname =
+      TextEditingController();
+  final TextEditingController _textEditingControllerPhoneNumber =
+      TextEditingController();
 
   final String _phoneNumberPrefix = '+90';
 
@@ -28,8 +33,8 @@ class _AdminGuardState extends State<AdminGuard> {
   Future<List<dynamic>> _teams;
 
   FirebaseHelper _fbHelper;
-  DatabaseReference _userRef;
   StreamSubscription<Event> _usersSubs;
+  StreamSubscription<Event> _dateAddSub;
 
   bool _isAdmin = false;
   bool _isValid = false;
@@ -57,8 +62,8 @@ class _AdminGuardState extends State<AdminGuard> {
 
   deleteKeyOldDates(_key) {
     var tempDates = List.from(_dates);
-    tempDates
-        .removeWhere((date) => date.keys.firstWhere((x) => x == _key, orElse: () => null) != null);
+    tempDates.removeWhere((date) =>
+        date.keys.firstWhere((x) => x == _key, orElse: () => null) != null);
     _dates = tempDates;
   }
 
@@ -99,7 +104,8 @@ class _AdminGuardState extends State<AdminGuard> {
               _widget = Center(
                   child: CircularProgressIndicator(
                       backgroundColor: Colors.grey,
-                      valueColor: AlwaysStoppedAnimation(Color.fromRGBO(157, 95, 222, 1))));
+                      valueColor: AlwaysStoppedAnimation(
+                          Color.fromRGBO(157, 95, 222, 1))));
               break;
             case ConnectionState.done:
               _widget = DropdownButtonFormField(
@@ -117,6 +123,29 @@ class _AdminGuardState extends State<AdminGuard> {
         });
   }
 
+  _onAddedDate(Event event) {
+    AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
+    appProvider.setDates(event.snapshot.value);
+  }
+
+  _userListener(Event event) {
+    if (event.snapshot.value != null) {
+      _employeeList = [];
+      event.snapshot.value.forEach((element) {
+        _employeeList.add(Employee.fromJson(element));
+      });
+      _users = event.snapshot.value;
+      updateUserState(_users);
+    }
+  }
+
+  Future<void> updateUserState(List<dynamic> users) async {
+    List<Employee> employeeList =
+        users.map((x) => Employee.fromJson(x)).toList();
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    userProvider.setEmployeeList(employeeList);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -125,16 +154,8 @@ class _AdminGuardState extends State<AdminGuard> {
     _teams = getData('teams');
     _roles = getData('roles');
     _dates = appProvider.dates;
-    _userRef = _fbHelper.firebaseDatabase.reference().child('users');
-    _usersSubs = _userRef.onValue.listen((event) {
-      if (event.snapshot.value != null) {
-        _employeeList = [];
-        event.snapshot.value.forEach((element) {
-          _employeeList.add(Employee.fromJson(element));
-        });
-        _users = event.snapshot.value;
-      }
-    });
+    _dateAddSub = _fbHelper.createSubscription('dates', _onAddedDate);
+    _usersSubs = _fbHelper.createSubscription('users', _userListener);
   }
 
   @override
@@ -142,6 +163,10 @@ class _AdminGuardState extends State<AdminGuard> {
     super.dispose();
     if (_usersSubs != null) {
       _usersSubs.cancel();
+    }
+
+    if (_dateAddSub != null) {
+      _dateAddSub.cancel();
     }
   }
 
@@ -227,11 +252,13 @@ class _AdminGuardState extends State<AdminGuard> {
                     ),
                     Row(
                       children: [
-                        Expanded(child: _getDropdown(_teams, 'Takım Seç', 'team')),
+                        Expanded(
+                            child: _getDropdown(_teams, 'Takım Seç', 'team')),
                         Padding(
                           padding: const EdgeInsets.only(right: 30),
                         ),
-                        Expanded(child: _getDropdown(_roles, 'Rol Seç', 'role')),
+                        Expanded(
+                            child: _getDropdown(_roles, 'Rol Seç', 'role')),
                       ],
                     ),
                     Row(
@@ -264,7 +291,8 @@ class _AdminGuardState extends State<AdminGuard> {
                         if (_isValid) {
                           Employee _emp = new Employee(
                               name: _textEditingControllerName.text.trim(),
-                              surname: _textEditingControllerSurname.text.trim(),
+                              surname:
+                                  _textEditingControllerSurname.text.trim(),
                               phoneNumber:
                                   '$_phoneNumberPrefix${_textEditingControllerPhoneNumber.text}'
                                       .trim(),
@@ -273,23 +301,28 @@ class _AdminGuardState extends State<AdminGuard> {
                               role: _memberOption['role'],
                               team: _memberOption['team']);
 
-                          GenerateGuardianHelper _ggHelper = new GenerateGuardianHelper();
+                          GenerateGuardianHelper _ggHelper =
+                              new GenerateGuardianHelper();
 
-                          await _fbHelper.setData('users', [..._users ?? [], _emp.toJson()]);
-                          List<Map<String, List<String>>> employeesWithDates = _ggHelper
-                              .generateGuardianDateList(_employeeList, DateTime(2020, 08, 12));
-                          combineDates(employeesWithDates);
-                          // await _fbHelper.setData('dates', employeesWithDates);
-                          // _formKey.currentState.reset();
-                          // _textEditingControllerName.clear();
-                          // _textEditingControllerPhoneNumber.clear();
-                          // _textEditingControllerSurname.clear();
+                          await _fbHelper.setData(
+                              'users', [..._users ?? [], _emp.toJson()]);
+                          List<Map<String, List<String>>> employeesWithDates =
+                              _ggHelper.generateGuardianDateList(
+                                  _employeeList, DateTime.now());
+                          var combinedDates = combineDates(employeesWithDates);
+                          await _fbHelper.setData('dates', combinedDates);
+                          _formKey.currentState.reset();
+                          _textEditingControllerName.clear();
+                          _textEditingControllerPhoneNumber.clear();
+                          _textEditingControllerSurname.clear();
                         }
                       },
                       child: Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                            color: !_isValid ? Colors.grey : Color.fromRGBO(157, 95, 222, 1),
+                            color: !_isValid
+                                ? Colors.grey
+                                : Color.fromRGBO(157, 95, 222, 1),
                             borderRadius: BorderRadius.circular(50)),
                         width: media.width - 100,
                         child: Text(
