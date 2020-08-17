@@ -12,6 +12,7 @@ import 'package:dominos_guardian/screens/home.dart';
 import 'package:dominos_guardian/widgets/custom_bottom_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -36,6 +37,10 @@ Future<void> main() async {
   FirebaseHelper _firebaseHelper = new FirebaseHelper(firebaseApp);
   final users = await _firebaseHelper.getData('users');
   final dates = await _firebaseHelper.getData('dates');
+  LocaLNotificationsHelper locaLNotificationsHelper =
+      new LocaLNotificationsHelper();
+  await locaLNotificationsHelper.sendScheduledNotification(
+      'Nöbetçiler yerlerinize!', Time(21, 45, 0));
   runApp(
     MultiProvider(
       providers: [
@@ -125,10 +130,6 @@ class _HomePageState extends State<HomePage> {
     //     'dates', generateGuardianHelper.generateGuardianDateList(employeeList));
     Future.delayed(Duration.zero, () async {
       await initialUser();
-      LocaLNotificationsHelper locaLNotificationsHelper =
-          new LocaLNotificationsHelper();
-      locaLNotificationsHelper
-          .sendScheduledNotification('Nöbetçiler yerlerinize!');
       setState(() {
         isLoading = false;
       });

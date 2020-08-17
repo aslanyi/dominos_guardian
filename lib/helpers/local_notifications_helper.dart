@@ -24,8 +24,8 @@ class LocaLNotificationsHelper {
         0, 'Nöbetçi', message, platformChannelSpecifics);
   }
 
-  Future sendScheduledNotification(String message) async {
-    var scheduledNotificationDateTime = Time(23, 45, 0);
+  Future sendScheduledNotification(String message, Time time) async {
+    var scheduledNotificationDateTime = time;
     NotificationDetails platformChannelSpecifics = NotificationDetails(
         _androidPlatformChannelSpecifics, _iosPlatformChannelSpecifics);
     await _flutterLocalNotificationsPlugin.showDailyAtTime(0, 'Nöbetçi',
