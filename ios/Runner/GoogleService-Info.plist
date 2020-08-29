@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>16245276840-k36b8ilmuos23c7rh3klmbbv6bqgt8s5.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.16245276840-k36b8ilmuos23c7rh3klmbbv6bqgt8s5</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBMTq8evWI5BB4t8X-8f_0OVfjue989sEg</string>
+	<key>GCM_SENDER_ID</key>
+	<string>16245276840</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.dominos.guardian</string>
+	<key>PROJECT_ID</key>
+	<string>dominos-guard</string>
+	<key>STORAGE_BUCKET</key>
+	<string>dominos-guard.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:16245276840:ios:0cb116f0faa5197920c29d</string>
+	<key>DATABASE_URL</key>
+	<string>https://dominos-guard.firebaseio.com</string>
+</dict>
+</plist>

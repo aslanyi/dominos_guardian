@@ -25,8 +25,7 @@ class HomeState extends State<Home> {
           element.forEach((key, value) {
             if (key == date) {
               value.forEach((val) {
-                Employee _employee = employees.firstWhere(
-                    (element) => element.phoneNumber == val,
+                Employee _employee = employees.firstWhere((element) => element.phoneNumber == val,
                     orElse: () => null);
                 if (_employee != null) {
                   guards.add(_employee);
@@ -37,8 +36,7 @@ class HomeState extends State<Home> {
         }
       });
     }
-    EmployeesWithDate todaysGuards =
-        new EmployeesWithDate(date: date, employees: guards);
+    EmployeesWithDate todaysGuards = new EmployeesWithDate(date: date, employees: guards);
     return todaysGuards;
   }
 
@@ -47,17 +45,15 @@ class HomeState extends State<Home> {
     final employeeList = context.watch<UserProvider>().employeeList;
     final dates = Provider.of<AppProvider>(context).dates;
     EmployeesWithDate todaysGuards = getEqualDates(dates, employeeList);
+    print(todaysGuards.employees);
     return CustomScrollView(slivers: <Widget>[
       CustomAppBar('Bugünün Nöbetçileri'),
       SliverList(
           delegate: SliverChildBuilderDelegate((context, index) {
         return Container(
-          padding:
-              const EdgeInsets.only(right: 20, left: 20, top: 0, bottom: 0),
+          padding: const EdgeInsets.only(right: 20, left: 20, top: 0, bottom: 0),
           child: Column(children: <Widget>[
-            UserCard(
-                date: todaysGuards.date,
-                employee: todaysGuards.employees[index]),
+            UserCard(date: todaysGuards.date, employee: todaysGuards.employees[index]),
             Padding(padding: const EdgeInsets.only(top: 30)),
           ]),
         );

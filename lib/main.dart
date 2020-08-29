@@ -1,4 +1,6 @@
 // import 'package:dominos_guardian/helpers/generate_guardian_helper.dart';
+import 'dart:io' show Platform;
+
 import 'package:dominos_guardian/helpers/initialize.dart';
 import 'package:dominos_guardian/helpers/local_notifications_helper.dart';
 import 'package:dominos_guardian/models/bottom_navigation_item.dart';
@@ -22,36 +24,56 @@ import 'models/shared_preferences_helper.dart';
 import 'screens/login.dart';
 
 Future<FirebaseApp> initializeApp() async {
-  await DotEnv().load('.env');
-  return await FirebaseApp.configure(
-      name: 'dominos-guard',
-      options: FirebaseOptions(
-          googleAppID: DotEnv().env['GOOGLE_ID'],
-          apiKey: DotEnv().env['API_KEY'],
-          databaseURL: DotEnv().env['DATABASE_URL']));
+  FirebaseApp _firebaseApp;
+  try {
+    if (Platform.isIOS) {
+      _firebaseApp = await Firebase.initializeApp(
+          options: FirebaseOptions(
+              appId: '1:16245276840:ios:0cb116f0faa5197920c29d',
+              apiKey: 'AIzaSyBMTq8evWI5BB4t8X-8f_0OVfjue989sEg',
+              projectId: 'dominos-guard',
+              messagingSenderId: '16245276840',
+              databaseURL: 'https://dominos-guard.firebaseio.com/'));
+    } else {
+      await DotEnv().load('.env');
+      _firebaseApp = await Firebase.initializeApp(
+          options: FirebaseOptions(
+              appId: DotEnv().env['GOOGLE_ID'],
+              apiKey: DotEnv().env['API_KEY'],
+              projectId: 'dominos-guard',
+              messagingSenderId: DotEnv().env['GCM_SENDER_ID'],
+              databaseURL: DotEnv().env['DATABASE_URL']));
+    }
+  } catch (e) {
+    print(e);
+  }
+  return _firebaseApp;
 }
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  FirebaseApp firebaseApp = await initializeApp();
-  FirebaseHelper _firebaseHelper = new FirebaseHelper(firebaseApp);
-  final users = await _firebaseHelper.getData('users');
-  final dates = await _firebaseHelper.getData('dates');
-  LocaLNotificationsHelper locaLNotificationsHelper =
-      new LocaLNotificationsHelper();
-  await locaLNotificationsHelper.sendScheduledNotification(
-      'Nöbetçiler yerlerinize!', Time(21, 45, 0));
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => UserProvider(users)),
-        ChangeNotifierProvider(
-          create: (_) => AppProvider(firebaseApp, dates),
-        )
-      ],
-      child: DominosGuardian(),
-    ),
-  );
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
+    FirebaseApp firebaseApp = await initializeApp();
+    FirebaseHelper _firebaseHelper = new FirebaseHelper(firebaseApp);
+    final users = await _firebaseHelper.getData('users');
+    final dates = await _firebaseHelper.getData('dates');
+    LocaLNotificationsHelper locaLNotificationsHelper = new LocaLNotificationsHelper();
+    await locaLNotificationsHelper.sendScheduledNotification(
+        'Nöbetçiler yerlerinize!', Time(21, 45, 0));
+    runApp(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => UserProvider(users)),
+          ChangeNotifierProvider(
+            create: (_) => AppProvider(firebaseApp, dates),
+          )
+        ],
+        child: DominosGuardian(),
+      ),
+    );
+  } catch (e) {
+    print(e);
+  }
 }
 
 class DominosGuardian extends StatelessWidget {
@@ -60,8 +82,7 @@ class DominosGuardian extends StatelessWidget {
     return MaterialApp(
         title: 'Domino\'s Guardian',
         theme: ThemeData(
-          textTheme:
-              GoogleFonts.montserratTextTheme(Theme.of(context).textTheme),
+          textTheme: GoogleFonts.montserratTextTheme(Theme.of(context).textTheme),
           primarySwatch: Colors.blue,
           primaryTextTheme: TextTheme(
             bodyText1: TextStyle(color: Color.fromRGBO(157, 95, 222, 1)),
@@ -87,8 +108,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<Employee> guards = [];
-  final SharedPreferencesHelper _sharedPreferencesHelper =
-      new SharedPreferencesHelper();
+  final SharedPreferencesHelper _sharedPreferencesHelper = new SharedPreferencesHelper();
 
   List<Widget> pages;
 
@@ -97,14 +117,11 @@ class _HomePageState extends State<HomePage> {
   bool isLoading = true;
 
   Future<void> initialUser() async {
-    final UserProvider userProvider =
-        Provider.of<UserProvider>(context, listen: false);
-    String phoneNumber =
-        await _sharedPreferencesHelper.getStringData('phoneNumber');
+    final UserProvider userProvider = Provider.of<UserProvider>(context, listen: false);
+    String phoneNumber = await _sharedPreferencesHelper.getStringData('phoneNumber');
     if (phoneNumber != null) {
-      Employee _employee = userProvider.employeeList.firstWhere(
-          (element) => element.phoneNumber == phoneNumber,
-          orElse: () => null);
+      Employee _employee = userProvider.employeeList
+          .firstWhere((element) => element.phoneNumber == phoneNumber, orElse: () => null);
       if (_employee != null) {
         userProvider.setCurrentUser(_employee);
         setState(() {
@@ -139,19 +156,16 @@ class _HomePageState extends State<HomePage> {
 
   BoxDecoration _background() {
     return BoxDecoration(
-        gradient: LinearGradient(
-            begin: Alignment.bottomLeft,
-            end: Alignment.topRight,
-            colors: [
-          const Color.fromRGBO(72, 71, 79, 0.3),
-          const Color.fromRGBO(157, 95, 222, 0.3),
-          const Color.fromRGBO(207, 98, 198, 0.3),
-          const Color.fromRGBO(221, 225, 249, 0.3),
-          const Color.fromRGBO(72, 169, 251, 0.3),
-          const Color.fromRGBO(95, 91, 245, 0.3),
-          const Color.fromRGBO(185, 167, 210, 0.3),
-          const Color.fromRGBO(156, 147, 234, 0.6),
-        ]));
+        gradient: LinearGradient(begin: Alignment.bottomLeft, end: Alignment.topRight, colors: [
+      const Color.fromRGBO(72, 71, 79, 0.3),
+      const Color.fromRGBO(157, 95, 222, 0.3),
+      const Color.fromRGBO(207, 98, 198, 0.3),
+      const Color.fromRGBO(221, 225, 249, 0.3),
+      const Color.fromRGBO(72, 169, 251, 0.3),
+      const Color.fromRGBO(95, 91, 245, 0.3),
+      const Color.fromRGBO(185, 167, 210, 0.3),
+      const Color.fromRGBO(156, 147, 234, 0.6),
+    ]));
   }
 
   Widget bottomNavigation() {
@@ -180,8 +194,8 @@ class _HomePageState extends State<HomePage> {
                 appBar: currentUser.isAdmin
                     ? AppBar(
                         backgroundColor: Colors.white,
-                        iconTheme: IconTheme.of(context)
-                            .copyWith(color: Color.fromRGBO(157, 95, 222, 1)))
+                        iconTheme:
+                            IconTheme.of(context).copyWith(color: Color.fromRGBO(157, 95, 222, 1)))
                     : null,
                 drawer: Drawer(
                   child: Column(
@@ -192,10 +206,8 @@ class _HomePageState extends State<HomePage> {
                               decoration: BoxDecoration(
                                 color: Colors.deepPurple,
                               ),
-                              accountName: Text(
-                                  '${currentUser.name} ${currentUser.surname}'),
-                              accountEmail:
-                                  Text('${currentUser.phoneNumber}'))),
+                              accountName: Text('${currentUser.name} ${currentUser.surname}'),
+                              accountEmail: Text('${currentUser.phoneNumber}'))),
                       Expanded(
                         child: Column(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -206,17 +218,15 @@ class _HomePageState extends State<HomePage> {
                                     leading: Icon(Icons.person_add,
                                         color: Color.fromRGBO(157, 95, 222, 1)),
                                     onTap: () {
-                                      Navigator.pushNamed(
-                                          context, '/admin_guard');
+                                      Navigator.pushNamed(context, '/admin_guard');
                                     },
                                     title: Text('Nöbetçi Ekle'),
                                   ),
                                   ListTile(
-                                    leading: Icon(Icons.delete,
-                                        color: Color.fromRGBO(157, 95, 222, 1)),
+                                    leading:
+                                        Icon(Icons.delete, color: Color.fromRGBO(157, 95, 222, 1)),
                                     onTap: () {
-                                      Navigator.pushNamed(
-                                          context, '/admin_guard_delete');
+                                      Navigator.pushNamed(context, '/admin_guard_delete');
                                     },
                                     title: Text('Nöbetçi Sil'),
                                   ),
@@ -234,9 +244,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 bottomNavigationBar: bottomNavigation(),
                 body: SafeArea(
-                    child: Container(
-                        decoration: _background(),
-                        child: pages[activePageIndex])))
+                    child: Container(decoration: _background(), child: pages[activePageIndex])))
             : Login();
   }
 }
